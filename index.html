@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大健康商品池</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #f6f9fc 0%, #eef4ff 100%);
+  color: #1f2937;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container { max-width: 1400px; margin: 0 auto; }
+
+.header {
+  background: linear-gradient(135deg, #36a374 0%, #21916f 100%);
+  color: white;
+  padding: 24px 32px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(54,163,116,0.2);
+}
+.header h1 { font-size: 24px; font-weight: 700; }
+.header p { font-size: 13px; opacity: 0.92; margin-top: 6px; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  border: 1px solid #e8edf3;
+}
+.kpi-label { font-size: 13px; color: #6b7280; font-weight: 500; }
+.kpi-value { font-size: 32px; font-weight: 700; color: #1a3a5c; margin: 6px 0; }
+.kpi-unit { font-size: 16px; color: #6b7280; margin-left: 4px; }
+.kpi-sub { font-size: 12px; color: #9ca3af; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: white;
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: #36a374; }
+.tab-btn.active {
+  background: linear-gradient(135deg, #36a374 0%, #21916f 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(54,163,116,0.3);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Scene cards */
+.scene-section {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-header h3 { font-size: 15px; color: #1f2937; }
+.section-header small { color: #9ca3af; font-weight: normal; font-size: 12px; margin-left: 6px; }
+.reset-btn {
+  background: #f3f4f6; color: #6b7280; border: none;
+  padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px;
+}
+.reset-btn:hover { background: #e5e7eb; }
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.scene-card {
+  padding: 14px 10px;
+  text-align: center;
+  background: #fafbfc;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.scene-card:hover { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.scene-card.selected { border-color: #36a374; background: #f0faf5; }
+.scene-card.active { opacity: 0.4; }
+.scene-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%; margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: white;
+}
+.scene-name { font-size: 12px; color: #1f2937; font-weight: 600; }
+.scene-gmv { font-size: 16px; font-weight: 700; color: #36a374; margin-top: 4px; }
+.scene-count { font-size: 11px; color: #9ca3af; }
+
+/* Table */
+.table-wrap {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  overflow-x: auto;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  background: #f8fafc;
+  padding: 12px 8px;
+  text-align: left;
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+.data-table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+.data-table tr:hover { background: #fafbfc; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.data-table .pos { color: #16a34a; }
+.data-table .neg { color: #dc2626; }
+
+/* 可排序表头 */
+.data-table.sortable th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 18px;
+}
+.data-table.sortable th[data-sort]:hover { background: #eef2f7; color: #1f2937; }
+.data-table.sortable th[data-sort]::after {
+  content: '⇅';
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #cbd5e1;
+  font-size: 11px;
+}
+.data-table.sortable th.sort-asc::after { content: '↑'; color: #2563eb; font-weight: 700; }
+.data-table.sortable th.sort-desc::after { content: '↓'; color: #2563eb; font-weight: 700; }
+.data-table.sortable th.sort-active { background: #eff6ff; color: #1d4ed8; }
+
+.prod-name { font-weight: 500; color: #1f2937; line-height: 1.4; }
+.prod-link-name { color: inherit; text-decoration: none; border-bottom: 1px dashed #cbd5e1; transition: color .15s, border-color .15s; }
+.prod-link-name:hover { color: #ef2442; border-bottom-color: #ef2442; }
+.prod-link-name::after { content: " ↗"; font-size: 11px; color: #9ca3af; }
+.prod-link-name:hover::after { color: #ef2442; }
+.prod-shop { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+.shop-link { color: #6b7280; text-decoration: none; padding: 1px 6px; border-radius: 4px; background: #f3f4f6; transition: all .15s; display: inline-block; }
+.shop-link:hover { color: #fff; background: #ef2442; }
+.shop-link::after { content: " ↗"; font-size: 10px; opacity: .6; }
+
+.scene-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sub { color: #9ca3af; font-weight: normal; margin-left: 4px; font-size: 11px; }
+
+/* Tab3 标杆商家 */
+.benchmark-summary {
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #78350f;
+  border-left: 4px solid #d4a574;
+}
+.shop-block {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.shop-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+.shop-logo {
+  width: 60px; height: 60px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.shop-info { flex: 1; }
+.shop-name { font-size: 22px; font-weight: 700; color: #1f2937; }
+.shop-tagline { font-size: 13px; color: #6b7280; margin-top: 4px; }
+.shop-full { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+.shop-stats { display: flex; gap: 24px; }
+.shop-stat-item { text-align: center; }
+.shop-stat-label { font-size: 11px; color: #9ca3af; }
+.shop-stat-value { font-size: 22px; font-weight: 700; color: #1a3a5c; }
+.shop-stat-value small { font-size: 13px; color: #6b7280; }
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.prod-card {
+  background: #fafbfc;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #f0f2f5;
+  transition: all 0.2s;
+}
+.prod-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.prod-img-box {
+  height: 200px;
+  display: flex; align-items: center; justify-content: center;
+  background: #fafbfc;
+  border-bottom: 1px solid #f0f2f5;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.prod-img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+}
+.prod-img-placeholder {
+  font-size: 40px; color: #d1d5db;
+}
+.prod-info { padding: 14px; }
+.prod-card-name {
+  font-size: 14px; font-weight: 600; color: #1f2937;
+  line-height: 1.4; min-height: 40px;
+}
+.prod-card-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.prod-price {
+  font-size: 13px; color: #dc2626; font-weight: 700;
+}
+.prod-selling {
+  font-size: 12px; color: #6b7280;
+  margin-top: 8px;
+  line-height: 1.4;
+  min-height: 32px;
+}
+.prod-perf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #f0f2f5;
+}
+.perf-item { text-align: center; }
+.perf-label { font-size: 10px; color: #9ca3af; }
+.perf-value { font-size: 14px; font-weight: 700; color: #36a374; }
+.perf-value span { font-size: 11px; color: #6b7280; }
+.prod-perf-none {
+  margin-top: 10px;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 11px;
+  color: #9ca3af;
+}
+.prod-link {
+  display: block;
+  margin-top: 10px;
+  padding: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.prod-link:hover { background: #fde68a; }
+.pos-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  background: #d1fae5;
+  color: #047857;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.wow-cell { text-align: center; white-space: nowrap; }
+.wow-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wow-boom  { background: #fee2e2; color: #b91c1c; }
+.wow-surge { background: #ffedd5; color: #c2410c; }
+.wow-up    { background: #d1fae5; color: #047857; }
+.wow-flat  { background: #f3f4f6; color: #6b7280; }
+.wow-down  { background: #dbeafe; color: #1d4ed8; }
+.wow-crash { background: #ede9fe; color: #6d28d9; }
+.wow-new   { background: #fef3c7; color: #b45309; }
+.wow-neu   { color: #9ca3af; }
+.rank-cell { text-align: center; white-space: nowrap; }
+.rank-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.rk-t0 { background: linear-gradient(135deg,#fde68a,#fbbf24); color: #78350f; box-shadow: 0 1px 3px rgba(251,191,36,.35); }
+.rk-t1 { background: #fef3c7; color: #92400e; }
+.rk-t2 { background: #fee2e2; color: #b91c1c; }
+.rk-t3 { background: #ffedd5; color: #c2410c; }
+.rk-t4 { background: #dbeafe; color: #1d4ed8; }
+.rk-t5 { background: #f3f4f6; color: #6b7280; }
+.rk-na { color: #9ca3af; }
+
+.mini-bars {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 28px; width: 60px;
+}
+.mini-bar {
+  flex: 1;
+  background: linear-gradient(to top, #36a374, #5bc497);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+
+/* Potential summary */
+.potential-summary {
+  background: linear-gradient(135deg, #fef9c3 0%, #fefce8 100%);
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #713f12;
+  border-left: 4px solid #eab308;
+}
+
+/* Placeholder */
+.placeholder {
+  background: white;
+  padding: 60px 40px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.placeholder-icon { font-size: 60px; margin-bottom: 16px; }
+.placeholder h3 { color: #1f2937; margin-bottom: 12px; }
+.placeholder p { color: #6b7280; margin: 10px 0; }
+.placeholder ul {
+  display: inline-block; text-align: left; margin: 14px 0; color: #4b5563;
+}
+.placeholder ul li { margin: 6px 0; }
+.placeholder .hint {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 8px;
+  display: inline-block;
+  font-size: 13px;
+}
+
+.footer {
+  text-align: center; padding: 24px;
+  color: #9ca3af; font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .scene-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <div class="header">
+    <h1>📊 大健康商品池</h1>
+    <p>三维打标体系 (FINAL版) · 数据周期 2026.04.29 - 2026.05.31 · 看板覆盖 4 周 KA 维度商品数据</p>
+  </div>
+  
+  
+  
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="bigsale" onclick="switchTab('bigsale')">🔥 近30天爆品 (44)</button>
+    <button class="tab-btn" data-tab="potential" onclick="switchTab('potential')">📈 飙升潜力品 (61)</button>
+  </div>
+  
+  <div class="tab-panel active" id="tab-bigsale">
+    
+    <div class="scene-section">
+      <div class="section-header">
+        <h3>🎯 功效场景透视 <small>(点击场景卡片筛选下方商品)</small></h3>
+        <button class="reset-btn" onclick="filterByScene('')">显示全部</button>
+      </div>
+      <div class="scene-grid">
+        <div class="scene-card " 
+             data-scene="美容养颜" onclick="filterByScene('美容养颜')">
+          <div class="scene-icon" style="background:#ff7875">✨</div>
+          <div class="scene-name">美容养颜</div>
+          <div class="scene-count">13品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="增强免疫" onclick="filterByScene('增强免疫')">
+          <div class="scene-icon" style="background:#faad14">🛡️</div>
+          <div class="scene-name">增强免疫</div>
+          <div class="scene-count">5品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="心脑养护" onclick="filterByScene('心脑养护')">
+          <div class="scene-icon" style="background:#fa8c16">🧠</div>
+          <div class="scene-name">心脑养护</div>
+          <div class="scene-count">7品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="维矿补充" onclick="filterByScene('维矿补充')">
+          <div class="scene-icon" style="background:#1890ff">💊</div>
+          <div class="scene-name">维矿补充</div>
+          <div class="scene-count">6品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="消化调理" onclick="filterByScene('消化调理')">
+          <div class="scene-icon" style="background:#a0d911">🌾</div>
+          <div class="scene-name">消化调理</div>
+          <div class="scene-count">6品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="减肥塑形" onclick="filterByScene('减肥塑形')">
+          <div class="scene-icon" style="background:#ff9a3c">⚖️</div>
+          <div class="scene-name">减肥塑形</div>
+          <div class="scene-count">2品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="情绪管理" onclick="filterByScene('情绪管理')">
+          <div class="scene-icon" style="background:#73d13d">💚</div>
+          <div class="scene-name">情绪管理</div>
+          <div class="scene-count">1品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="清体排毒" onclick="filterByScene('清体排毒')">
+          <div class="scene-icon" style="background:#13c2c2">🌿</div>
+          <div class="scene-name">清体排毒</div>
+          <div class="scene-count">2品</div>
+        </div>
+        
+        <div class="scene-card " 
+             data-scene="女性特护" onclick="filterByScene('女性特护')">
+          <div class="scene-icon" style="background:#eb2f96">💜</div>
+          <div class="scene-name">女性特护</div>
+          <div class="scene-count">2品</div>
+        </div>
+        
+        <div class="scene-card active" 
+             data-scene="缓解疲劳" onclick="filterByScene('缓解疲劳')">
+          <div class="scene-icon" style="background:#722ed1">⚡</div>
+          <div class="scene-name">缓解疲劳</div>
+          <div class="scene-count">—</div>
+        </div>
+        
+        <div class="scene-card active" 
+             data-scene="运动健康" onclick="filterByScene('运动健康')">
+          <div class="scene-icon" style="background:#52c41a">🏃</div>
+          <div class="scene-name">运动健康</div>
+          <div class="scene-count">—</div>
+        </div>
+        
+        <div class="scene-card active" 
+             data-scene="睡眠改善" onclick="filterByScene('睡眠改善')">
+          <div class="scene-icon" style="background:#2f54eb">🌙</div>
+          <div class="scene-name">睡眠改善</div>
+          <div class="scene-count">—</div>
+        </div>
+        </div>
+    </div>
+    
+    
+    <div class="table-wrap">
+      <table class="data-table sortable" id="qualified-table">
+        <thead>
+          <tr>
+            <th data-sort="idx" data-type="num">#</th>
+            <th data-sort="name" data-type="str">商品 / 店铺</th>
+            <th data-sort="scene" data-type="str">功效场景</th>
+            <th data-sort="gmv4w" data-type="num" class="sort-active sort-desc" title="按 4周累计 GMV 综合分档">综合排名</th>
+            <th>4周趋势</th>
+            <th data-sort="buyers4w" data-type="num" title="4周关联买手数 / W21周关联买手数">关联买手数</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr data-scene="美容养颜" data-idx="1" data-gmv4w="2302399.06" data-gmvw21="25726.9" data-buyers4w="2" data-buyersw21="2">
+          <td>1</td>
+          <td>
+            <div class="prod-name">燕之屋囗服燕窝肽高光瓶小分子肽燕窝饮唾液酸白番茄维c</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/67c00e80000000000e0106b5" target="_blank" rel="noopener">🏪 YANPEP旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t0">🏆 T0 顶流</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.4w"></div><div class="mini-bar" style="height:100%" title="W20: 227.3w"></div><div class="mini-bar" style="height:1%" title="W21: 2.6w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:2</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="2" data-gmv4w="2069484" data-gmvw21="3144" data-buyers4w="1" data-buyersw21="1">
+          <td>2</td>
+          <td>
+            <div class="prod-name">【李嗲专享】全基因组测序 健康服务套装（1人份）嗲姐同款</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/search_result?keyword=%E5%BE%AE%E5%9F%BA%E5%9B%A0WEGENE%E6%97%97%E8%88%B0%E5%BA%97&type=store" target="_blank" rel="noopener">🏪 微基因WEGENE旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t0">🏆 T0 顶流</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 206.6w"></div><div class="mini-bar" style="height:0%" title="W21: 0.3w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="增强免疫" data-idx="3" data-gmv4w="1257725.5999999999" data-gmvw21="291076.01" data-buyers4w="8" data-buyersw21="4">
+          <td>3</td>
+          <td>
+            <div class="prod-name">【Lingling专属】五色灵芝72粒*3瓶+知音60粒*3瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t0">🏆 T0 顶流</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:58%" title="W18: 34.7w"></div><div class="mini-bar" style="height:3%" title="W19: 1.8w"></div><div class="mini-bar" style="height:100%" title="W20: 60.2w"></div><div class="mini-bar" style="height:48%" title="W21: 29.1w"></div></div></td>
+          <td class="num">8<small class="sub">/W21:4</small></td>
+        </tr>
+        
+        <tr data-scene="增强免疫" data-idx="4" data-gmv4w="1147390.27" data-gmvw21="337081.16000000003" data-buyers4w="31" data-buyersw21="13">
+          <td>4</td>
+          <td>
+            <div class="prod-name">【Lingling专属】五色灵芝72粒*6瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t0">🏆 T0 顶流</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:87%" title="W18: 35.9w"></div><div class="mini-bar" style="height:9%" title="W19: 3.9w"></div><div class="mini-bar" style="height:100%" title="W20: 41.3w"></div><div class="mini-bar" style="height:82%" title="W21: 33.7w"></div></div></td>
+          <td class="num">31<small class="sub">/W21:13</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="5" data-gmv4w="1078117.4" data-gmvw21="564159.7000000001" data-buyers4w="10" data-buyersw21="6">
+          <td>5</td>
+          <td>
+            <div class="prod-name">活性肽辅酶Q10软胶囊60粒提升心健康能量有助于抗衰老补剂cn</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66b99df4000000001d0210e7" target="_blank" rel="noopener">🏪 Designs for Health海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t0">🏆 T0 顶流</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.3w"></div><div class="mini-bar" style="height:1%" title="W19: 0.5w"></div><div class="mini-bar" style="height:90%" title="W20: 50.6w"></div><div class="mini-bar" style="height:100%" title="W21: 56.4w"></div></div></td>
+          <td class="num">10<small class="sub">/W21:6</small></td>
+        </tr>
+        
+        <tr data-scene="情绪管理" data-idx="6" data-gmv4w="775126.0" data-gmvw21="773428.0" data-buyers4w="1" data-buyersw21="1">
+          <td>6</td>
+          <td>
+            <div class="prod-name">【两只小狗六专属】顺六福Nodules FREE30粒装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#73d13d1a;color:#73d13d">💚 情绪管理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t1">⭐⭐⭐⭐⭐ T1 头部</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.2w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 77.3w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="减肥塑形" data-idx="7" data-gmv4w="775098" data-gmvw21="758407" data-buyers4w="2" data-buyersw21="1">
+          <td>7</td>
+          <td>
+            <div class="prod-name">【君弘专属】脂红温30粒 香港直邮 3瓶装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff9a3c1a;color:#ff9a3c">⚖️ 减肥塑形</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t1">⭐⭐⭐⭐⭐ T1 头部</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 1.7w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 75.8w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="维矿补充" data-idx="8" data-gmv4w="466331.60000000003" data-gmvw21="164521.26" data-buyers4w="6" data-buyersw21="4">
+          <td>8</td>
+          <td>
+            <div class="prod-name">【王冠专属】TGR组合礼盒+3瓶孢子益生菌</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6421206600000000120116b6" target="_blank" rel="noopener">🏪 Microbiome Labs益葆来海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 30.2w"></div><div class="mini-bar" style="height:55%" title="W21: 16.5w"></div></div></td>
+          <td class="num">6<small class="sub">/W21:4</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="9" data-gmv4w="448452.52" data-gmvw21="157133.48" data-buyers4w="30" data-buyersw21="14">
+          <td>9</td>
+          <td>
+            <div class="prod-name">【Lingling专属】乌丝素90粒*6瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:69%" title="W18: 11.0w"></div><div class="mini-bar" style="height:13%" title="W19: 2.1w"></div><div class="mini-bar" style="height:100%" title="W20: 16.0w"></div><div class="mini-bar" style="height:98%" title="W21: 15.7w"></div></div></td>
+          <td class="num">30<small class="sub">/W21:14</small></td>
+        </tr>
+        
+        <tr data-scene="维矿补充" data-idx="10" data-gmv4w="427030.41" data-gmvw21="49155.06999999999" data-buyers4w="2" data-buyersw21="2">
+          <td>10</td>
+          <td>
+            <div class="prod-name">【Jiying618】季卡·基础全能三件套</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 37.8w"></div><div class="mini-bar" style="height:13%" title="W21: 4.9w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:2</small></td>
+        </tr>
+        
+        <tr data-scene="增强免疫" data-idx="11" data-gmv4w="422070.92000000004" data-gmvw21="0" data-buyers4w="1" data-buyersw21="0">
+          <td>11</td>
+          <td>
+            <div class="prod-name">【Lingling专属】五色灵芝72粒*6瓶+知音虫草60粒*6瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/67b30d320000000004029e8e" target="_blank" rel="noopener">🏪 维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:100%" title="W18: 42.2w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:0%" title="W21: 0.0w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:0</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="12" data-gmv4w="407013" data-gmvw21="385755" data-buyers4w="2" data-buyersw21="2">
+          <td>12</td>
+          <td>
+            <div class="prod-name">【君弘专属】19200PlusNAD+补充剂β-烟酰胺单核苷酸 直邮3瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:6%" title="W19: 2.1w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 38.6w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:2</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="13" data-gmv4w="401918.7" data-gmvw21="29836.68" data-buyers4w="5" data-buyersw21="3">
+          <td>13</td>
+          <td>
+            <div class="prod-name">【饼饼宝藏囤货装】KIREI 弹力胶囊｜V脸+全身紧致反重力｜6袋装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66e00dae000000001d0310e8" target="_blank" rel="noopener">🏪 季令海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:100%" title="W19: 33.1w"></div><div class="mini-bar" style="height:13%" title="W20: 4.1w"></div><div class="mini-bar" style="height:9%" title="W21: 3.0w"></div></div></td>
+          <td class="num">5<small class="sub">/W21:3</small></td>
+        </tr>
+        
+        <tr data-scene="女性特护" data-idx="14" data-gmv4w="383045" data-gmvw21="383045" data-buyers4w="1" data-buyersw21="1">
+          <td>14</td>
+          <td>
+            <div class="prod-name">【两只小狗六专属】卵巢黄金 60粒 女性保养PQQ</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#eb2f961a;color:#eb2f96">💜 女性特护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 38.3w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="增强免疫" data-idx="15" data-gmv4w="351025.74000000005" data-gmvw21="67810.58" data-buyers4w="25" data-buyersw21="8">
+          <td>15</td>
+          <td>
+            <div class="prod-name">【Lingling专属】增强肺部功能改善呼吸系统知音虫草60粒/盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:92%" title="W18: 12.9w"></div><div class="mini-bar" style="height:10%" title="W19: 1.5w"></div><div class="mini-bar" style="height:100%" title="W20: 14.0w"></div><div class="mini-bar" style="height:49%" title="W21: 6.8w"></div></div></td>
+          <td class="num">25<small class="sub">/W21:8</small></td>
+        </tr>
+        
+        <tr data-scene="维矿补充" data-idx="16" data-gmv4w="345995.43000000005" data-gmvw21="1699" data-buyers4w="2" data-buyersw21="1">
+          <td>16</td>
+          <td>
+            <div class="prod-name">【 大f专属】One复合维生素绿粉补充剂（礼盒）</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5b3acf06e8ac2b4276e87a44" target="_blank" rel="noopener">🏪 BIOGENA葆淳海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 34.4w"></div><div class="mini-bar" style="height:0%" title="W21: 0.2w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="清体排毒" data-idx="17" data-gmv4w="333433.52" data-gmvw21="90587.5" data-buyers4w="38" data-buyersw21="18">
+          <td>17</td>
+          <td>
+            <div class="prod-name">【Lingling专属】祛湿轻60粒*6瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#13c2c21a;color:#13c2c2">🌿 清体排毒</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:62%" title="W18: 8.2w"></div><div class="mini-bar" style="height:21%" title="W19: 2.8w"></div><div class="mini-bar" style="height:100%" title="W20: 13.2w"></div><div class="mini-bar" style="height:68%" title="W21: 9.1w"></div></div></td>
+          <td class="num">38<small class="sub">/W21:18</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="18" data-gmv4w="329769.0" data-gmvw21="0" data-buyers4w="2" data-buyersw21="0">
+          <td>18</td>
+          <td>
+            <div class="prod-name">【安吉专属3盒】燕之屋口服燕窝肽聚光瓶小分子肽白番茄燕窝饮</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/67c00e80000000000e0106b5" target="_blank" rel="noopener">🏪 YANPEP旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 33.0w"></div><div class="mini-bar" style="height:0%" title="W21: 0.0w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:0</small></td>
+        </tr>
+        
+        <tr data-scene="消化调理" data-idx="19" data-gmv4w="327380.73" data-gmvw21="100768.01999999999" data-buyers4w="21" data-buyersw21="12">
+          <td>19</td>
+          <td>
+            <div class="prod-name">美国进口肠道孢子益生菌胶囊 MegaSporeBiotic 60粒/瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6421206600000000120116b6" target="_blank" rel="noopener">🏪 Microbiome Labs益葆来海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.2w"></div><div class="mini-bar" style="height:2%" title="W19: 0.5w"></div><div class="mini-bar" style="height:100%" title="W20: 21.9w"></div><div class="mini-bar" style="height:46%" title="W21: 10.1w"></div></div></td>
+          <td class="num">21<small class="sub">/W21:12</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="20" data-gmv4w="325428.57000000007" data-gmvw21="2716.09" data-buyers4w="2" data-buyersw21="1">
+          <td>20</td>
+          <td>
+            <div class="prod-name">jiying专属【预售4瓶装】活性肽辅酶Q10软胶囊60粒cn</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66b99df4000000001d0210e7" target="_blank" rel="noopener">🏪 Designs for Health海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 32.3w"></div><div class="mini-bar" style="height:1%" title="W21: 0.3w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="21" data-gmv4w="314187.5" data-gmvw21="0" data-buyers4w="1" data-buyersw21="0">
+          <td>21</td>
+          <td>
+            <div class="prod-name">【jiying专属6瓶】挪威小鱼双倍深海鱼油Omega-3成人软胶囊120</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/68fb29b3000000003201613f" target="_blank" rel="noopener">🏪 Nordic Naturals海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 31.4w"></div><div class="mini-bar" style="height:0%" title="W21: 0.0w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:0</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="22" data-gmv4w="307461.06000000006" data-gmvw21="10042.33" data-buyers4w="3" data-buyersw21="3">
+          <td>22</td>
+          <td>
+            <div class="prod-name">【色拉和博士】辅酶Q10泛醇活性金</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5b3acf06e8ac2b4276e87a44" target="_blank" rel="noopener">🏪 BIOGENA葆淳海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:5%" title="W19: 1.3w"></div><div class="mini-bar" style="height:100%" title="W20: 28.4w"></div><div class="mini-bar" style="height:4%" title="W21: 1.0w"></div></div></td>
+          <td class="num">3<small class="sub">/W21:3</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="23" data-gmv4w="303056.6" data-gmvw21="107379.19" data-buyers4w="1" data-buyersw21="1">
+          <td>23</td>
+          <td>
+            <div class="prod-name">【jiying专属6瓶】挪威小鱼双倍深海鱼油Omega-3成人软胶囊60粒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/68fb29b3000000003201613f" target="_blank" rel="noopener">🏪 Nordic Naturals海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t2">⭐⭐⭐⭐ T2 热销</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 19.6w"></div><div class="mini-bar" style="height:55%" title="W21: 10.7w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="减肥塑形" data-idx="24" data-gmv4w="294079.61999999994" data-gmvw21="107319.27999999997" data-buyers4w="18" data-buyersw21="11">
+          <td>24</td>
+          <td>
+            <div class="prod-name">【尚朵朵专属】黑姜片30粒/盒法国【新春市集】</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/644499540000000014013e37" target="_blank" rel="noopener">🏪 EAFIT海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff9a3c1a;color:#ff9a3c">⚖️ 减肥塑形</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:63%" title="W18: 6.7w"></div><div class="mini-bar" style="height:50%" title="W19: 5.3w"></div><div class="mini-bar" style="height:62%" title="W20: 6.6w"></div><div class="mini-bar" style="height:100%" title="W21: 10.7w"></div></div></td>
+          <td class="num">18<small class="sub">/W21:11</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="25" data-gmv4w="291651.4" data-gmvw21="291651.4" data-buyers4w="1" data-buyersw21="1">
+          <td>25</td>
+          <td>
+            <div class="prod-name">【臣请闻香专属】内清外塑组合澈体大黑针30支+瓜拉纳燃卡20支</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/675fc8410000000018016984" target="_blank" rel="noopener">🏪 SUPERDIET舒伯妮尔海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 29.2w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="增强免疫" data-idx="26" data-gmv4w="289881.71" data-gmvw21="50268.62" data-buyers4w="1" data-buyersw21="1">
+          <td>26</td>
+          <td>
+            <div class="prod-name">【Jiying618】三瓶·精粹绿粉滋补养颜抗老免疫力28种珍稀植萃27/5</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 24.0w"></div><div class="mini-bar" style="height:21%" title="W21: 5.0w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="清体排毒" data-idx="27" data-gmv4w="284674.2699999999" data-gmvw21="138578.70999999996" data-buyers4w="18" data-buyersw21="10">
+          <td>27</td>
+          <td>
+            <div class="prod-name">汪汪专属.护士茶 有机认证 百年古方 深度清体净澈</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/558cba896b9f1610737b729f" target="_blank" rel="noopener">🏪 FLORA海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#13c2c21a;color:#13c2c2">🌿 清体排毒</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:9%" title="W18: 1.3w"></div><div class="mini-bar" style="height:10%" title="W19: 1.4w"></div><div class="mini-bar" style="height:86%" title="W20: 11.9w"></div><div class="mini-bar" style="height:100%" title="W21: 13.9w"></div></div></td>
+          <td class="num">18<small class="sub">/W21:10</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="28" data-gmv4w="276956.25" data-gmvw21="86294.93000000001" data-buyers4w="23" data-buyersw21="13">
+          <td>28</td>
+          <td>
+            <div class="prod-name">【陶子专属】KIREI 弹力胶囊｜V脸+全身提拉紧致｜月度装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66e00dae000000001d0310e8" target="_blank" rel="noopener">🏪 季令海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:38%" title="W18: 3.5w"></div><div class="mini-bar" style="height:72%" title="W19: 6.5w"></div><div class="mini-bar" style="height:100%" title="W20: 9.1w"></div><div class="mini-bar" style="height:95%" title="W21: 8.6w"></div></div></td>
+          <td class="num">23<small class="sub">/W21:13</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="29" data-gmv4w="276952.09000000014" data-gmvw21="64175.27999999999" data-buyers4w="3" data-buyersw21="3">
+          <td>29</td>
+          <td>
+            <div class="prod-name">【Lingling专属】第二代光瓷饮弹嫩肌肤拒绝暗沉14支*2盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6062555d0000000001005bd2" target="_blank" rel="noopener">🏪 D-LAB NUTRICOSMETICS海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 21.3w"></div><div class="mini-bar" style="height:30%" title="W21: 6.4w"></div></div></td>
+          <td class="num">3<small class="sub">/W21:3</small></td>
+        </tr>
+        
+        <tr data-scene="消化调理" data-idx="30" data-gmv4w="265529.83" data-gmvw21="42406.06" data-buyers4w="5" data-buyersw21="4">
+          <td>30</td>
+          <td>
+            <div class="prod-name">【芸芸呼呼专属】调理套餐-孢子益生菌*3+全消化酶*1</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6421206600000000120116b6" target="_blank" rel="noopener">🏪 Microbiome Labs益葆来海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:1%" title="W19: 0.1w"></div><div class="mini-bar" style="height:100%" title="W20: 22.2w"></div><div class="mini-bar" style="height:19%" title="W21: 4.2w"></div></div></td>
+          <td class="num">5<small class="sub">/W21:4</small></td>
+        </tr>
+        
+        <tr data-scene="消化调理" data-idx="31" data-gmv4w="253875.38999999998" data-gmvw21="253875.38999999998" data-buyers4w="2" data-buyersw21="2">
+          <td>31</td>
+          <td>
+            <div class="prod-name">【如酱专属】【夏日CP身材管理组合】内脂支援+金装热控片</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5bfc9e32e4840900015621e2" target="_blank" rel="noopener">🏪 FANCL HealthScience海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 25.4w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:2</small></td>
+        </tr>
+        
+        <tr data-scene="维矿补充" data-idx="32" data-gmv4w="247105.71999999994" data-gmvw21="230907.90999999995" data-buyers4w="9" data-buyersw21="7">
+          <td>32</td>
+          <td>
+            <div class="prod-name">奥己小蓝钙赖氨酸液体钙15ml*30条升级版儿童青少年营养补钙镁锌</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/63087fbc000000001200dee6" target="_blank" rel="noopener">🏪 organic garden 奥己海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.2w"></div><div class="mini-bar" style="height:3%" title="W19: 0.6w"></div><div class="mini-bar" style="height:3%" title="W20: 0.7w"></div><div class="mini-bar" style="height:100%" title="W21: 23.1w"></div></div></td>
+          <td class="num">9<small class="sub">/W21:7</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="33" data-gmv4w="241757.90000000005" data-gmvw21="241757.90000000005" data-buyers4w="1" data-buyersw21="1">
+          <td>33</td>
+          <td>
+            <div class="prod-name">【是辰不是晨ii专属】7S+5S闪白片|韩国谷胱甘肽麦角硫因</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/65ea5f72000000000500aff7" target="_blank" rel="noopener">🏪 Dr.Schiller海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 24.2w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="消化调理" data-idx="34" data-gmv4w="230234" data-gmvw21="225637" data-buyers4w="2" data-buyersw21="2">
+          <td>34</td>
+          <td>
+            <div class="prod-name">【君弘专属】开菲尔益生菌 30袋/盒【香港直邮】3盒装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 0.5w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 22.6w"></div></div></td>
+          <td class="num">2<small class="sub">/W21:2</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="35" data-gmv4w="222576.77000000002" data-gmvw21="92377.09000000001" data-buyers4w="9" data-buyersw21="7">
+          <td>35</td>
+          <td>
+            <div class="prod-name">【赵唯伊专属】888代谢饮便携装金装2.0版循环热燃内调高燃代谢</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6459ac2e0000000029016ca0" target="_blank" rel="noopener">🏪 ZUCCARI意卡莉海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:5%" title="W19: 0.6w"></div><div class="mini-bar" style="height:100%" title="W20: 12.4w"></div><div class="mini-bar" style="height:75%" title="W21: 9.2w"></div></div></td>
+          <td class="num">9<small class="sub">/W21:7</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="36" data-gmv4w="222313.05" data-gmvw21="1198" data-buyers4w="1" data-buyersw21="1">
+          <td>36</td>
+          <td>
+            <div class="prod-name">白草莓超模丸悦享超模曲线0负担60/粒..</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5fd8656d000000000101f0c4" target="_blank" rel="noopener">🏪 Bmark海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:100%" title="W19: 13.3w"></div><div class="mini-bar" style="height:67%" title="W20: 8.9w"></div><div class="mini-bar" style="height:1%" title="W21: 0.1w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="37" data-gmv4w="214228" data-gmvw21="214228" data-buyers4w="1" data-buyersw21="1">
+          <td>37</td>
+          <td>
+            <div class="prod-name">【两只小狗六专属】心脑血管卫士恤年轻 辅酶素Q10</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 21.4w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="维矿补充" data-idx="38" data-gmv4w="213139.75" data-gmvw21="71218.88" data-buyers4w="25" data-buyersw21="13">
+          <td>38</td>
+          <td>
+            <div class="prod-name">活性维生素B族B107 熬夜加班 痘痘油皮 口腔上火 运动员同款28/02</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.2w"></div><div class="mini-bar" style="height:2%" title="W19: 0.3w"></div><div class="mini-bar" style="height:100%" title="W20: 13.7w"></div><div class="mini-bar" style="height:52%" title="W21: 7.1w"></div></div></td>
+          <td class="num">25<small class="sub">/W21:13</small></td>
+        </tr>
+        
+        <tr data-scene="消化调理" data-idx="39" data-gmv4w="212286.36000000004" data-gmvw21="115598.89000000001" data-buyers4w="20" data-buyersw21="13">
+          <td>39</td>
+          <td>
+            <div class="prod-name">【石头哥】有机豌豆蛋白粉+益生菌 455g/罐</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/609bbb330000000001002c70" target="_blank" rel="noopener">🏪 Organika奥加尼卡海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:6%" title="W18: 0.7w"></div><div class="mini-bar" style="height:9%" title="W19: 1.0w"></div><div class="mini-bar" style="height:69%" title="W20: 7.9w"></div><div class="mini-bar" style="height:100%" title="W21: 11.6w"></div></div></td>
+          <td class="num">20<small class="sub">/W21:13</small></td>
+        </tr>
+        
+        <tr data-scene="美容养颜" data-idx="40" data-gmv4w="208843.15000000002" data-gmvw21="123655.7" data-buyers4w="1" data-buyersw21="1">
+          <td>40</td>
+          <td>
+            <div class="prod-name">【白雪公主专属】联合利华NF黄金胶囊养发内调生物素姜黄头发口服</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6445f39200000000120372d5" target="_blank" rel="noopener">🏪 Nutrafol海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.1w"></div><div class="mini-bar" style="height:68%" title="W19: 8.4w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 12.4w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="消化调理" data-idx="41" data-gmv4w="208601.07999999996" data-gmvw21="208601.07999999996" data-buyers4w="1" data-buyersw21="1">
+          <td>41</td>
+          <td>
+            <div class="prod-name">【自律首发机制】超值110粒控热减脂第三代B420 Ultra超燃益生菌</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5baec4594048540001af7d77" target="_blank" rel="noopener">🏪 lifespace益倍适海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 20.9w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="女性特护" data-idx="42" data-gmv4w="207913" data-gmvw21="207913" data-buyers4w="1" data-buyersw21="1">
+          <td>42</td>
+          <td>
+            <div class="prod-name">【两只小狗六专属直邮】卵巢黄金60粒 女性保健护理卵子更年期</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60cda51400000000010082c7" target="_blank" rel="noopener">🏪 Yonen永恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#eb2f961a;color:#eb2f96">💜 女性特护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 20.8w"></div></div></td>
+          <td class="num">1<small class="sub">/W21:1</small></td>
+        </tr>
+        
+        <tr data-scene="维矿补充" data-idx="43" data-gmv4w="204989.66" data-gmvw21="148763.12" data-buyers4w="5" data-buyersw21="2">
+          <td>43</td>
+          <td>
+            <div class="prod-name">【涅槃重生专属】酯C植萃复配胶囊VC维C</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5b3acf06e8ac2b4276e87a44" target="_blank" rel="noopener">🏪 BIOGENA葆淳海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:8%" title="W18: 1.2w"></div><div class="mini-bar" style="height:8%" title="W19: 1.2w"></div><div class="mini-bar" style="height:21%" title="W20: 3.2w"></div><div class="mini-bar" style="height:100%" title="W21: 14.9w"></div></div></td>
+          <td class="num">5<small class="sub">/W21:2</small></td>
+        </tr>
+        
+        <tr data-scene="心脑养护" data-idx="44" data-gmv4w="204767.84999999998" data-gmvw21="204767.84999999998" data-buyers4w="3" data-buyersw21="3">
+          <td>44</td>
+          <td>
+            <div class="prod-name">【子豪专属】高含量纯南极磷虾油美国进口750mg80粒深海鱼油升级</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/611cde400000000001017612" target="_blank" rel="noopener">🏪 MegaRed脉拓海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t3">⭐⭐⭐ T3 主力</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 20.5w"></div></div></td>
+          <td class="num">3<small class="sub">/W21:3</small></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+  
+  <div class="tab-panel" id="tab-potential">
+    
+    <div class="potential-summary">
+      <p>📈 共 <b>61</b> 个潜力品，满足「连续≥2周环比正向 + W21达阈值」筛选条件，按 W20→W21 涨幅倒序排列</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table sortable">
+        <thead>
+          <tr>
+            <th data-sort="idx" data-type="num">#</th>
+            <th data-sort="name" data-type="str">商品 / 店铺</th>
+            <th data-sort="scene" data-type="str">功效场景</th>
+            <th data-sort="gmv4w" data-type="num" class="sort-active sort-desc" title="按 4周累计 GMV 综合分档">综合排名</th>
+            <th data-sort="pos" data-type="num">增长态势</th>
+            <th>4周趋势</th>
+            <th data-sort="buyers4w" data-type="num">关联买手数</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr data-idx="1" data-scene="美容养颜" data-pos="2" data-gmvw21="52876.08" data-gmv4w="53505.08" data-buyers4w="1">
+          <td>1</td>
+          <td>
+            <div class="prod-name">【进博同款 GIGI专属】御时双生胶囊  麦角硫因三相御老</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5c4a73a000000000110201d1" target="_blank" rel="noopener">🏪 MitoQ海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:1%" title="W20: 0.1w"></div><div class="mini-bar" style="height:100%" title="W21: 5.3w"></div></div></td>
+          <td class="num">1</td>
+        </tr>
+        
+        <tr data-idx="2" data-scene="美容养颜" data-pos="2" data-gmvw21="36092.4" data-gmv4w="44744.4" data-buyers4w="5">
+          <td>2</td>
+          <td>
+            <div class="prod-name">【涅槃专属-官旗】日本丸治益生菠萝童颜丸+白姜黄</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/62665c3c0000000010008a63" target="_blank" rel="noopener">🏪 Dr.Watanabe海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:23%" title="W18: 0.8w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:1%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 3.6w"></div></div></td>
+          <td class="num">5</td>
+        </tr>
+        
+        <tr data-idx="3" data-scene="美容养颜" data-pos="2" data-gmvw21="38333.81" data-gmv4w="39060.81" data-buyers4w="2">
+          <td>3</td>
+          <td>
+            <div class="prod-name">【刘依蝶专属】肝排四重复配安瓶小金针浓缩小C安瓶 10MLX20支</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/675fc8410000000018016984" target="_blank" rel="noopener">🏪 SUPERDIET舒伯妮尔海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:2%" title="W20: 0.1w"></div><div class="mini-bar" style="height:100%" title="W21: 3.8w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="4" data-scene="缓解疲劳" data-pos="2" data-gmvw21="56334.74" data-gmv4w="58339.74" data-buyers4w="3">
+          <td>4</td>
+          <td>
+            <div class="prod-name">眼睛健康[小绿源]护眼丸120粒｜干涩花疲惫｜美国原装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5ba1fb84340c8a0001dd7435" target="_blank" rel="noopener">🏪 上源优养UpNourish海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#722ed11a;color:#722ed1">⚡ 缓解疲劳</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:2%" title="W18: 0.1w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:2%" title="W20: 0.1w"></div><div class="mini-bar" style="height:100%" title="W21: 5.6w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="5" data-scene="美容养颜" data-pos="2" data-gmvw21="180321.41000000003" data-gmv4w="191265.81000000003" data-buyers4w="8">
+          <td>5</td>
+          <td>
+            <div class="prod-name">【石头哥专属】奥己赖氨酸星倍高成长胶囊90粒新升级青少年儿童</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/63087fbc000000001200dee6" target="_blank" rel="noopener">🏪 organic garden 奥己海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:2%" title="W18: 0.3w"></div><div class="mini-bar" style="height:2%" title="W19: 0.4w"></div><div class="mini-bar" style="height:2%" title="W20: 0.4w"></div><div class="mini-bar" style="height:100%" title="W21: 18.0w"></div></div></td>
+          <td class="num">8</td>
+        </tr>
+        
+        <tr data-idx="6" data-scene="运动健康" data-pos="2" data-gmvw21="56381.58" data-gmv4w="60679.93" data-buyers4w="12">
+          <td>6</td>
+          <td>
+            <div class="prod-name">【哈佛专属】姜黄素胶囊BCM95痘肌健身关节熬夜应酬肝脏肠胃保健</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5daebe94000000000100946c" target="_blank" rel="noopener">🏪 Supherb素赫伯海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#52c41a1a;color:#52c41a">🏃 运动健康</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:3%" title="W18: 0.2w"></div><div class="mini-bar" style="height:2%" title="W19: 0.1w"></div><div class="mini-bar" style="height:3%" title="W20: 0.2w"></div><div class="mini-bar" style="height:100%" title="W21: 5.6w"></div></div></td>
+          <td class="num">12</td>
+        </tr>
+        
+        <tr data-idx="7" data-scene="美容养颜" data-pos="2" data-gmvw21="30619.5" data-gmv4w="34938.83" data-buyers4w="3">
+          <td>7</td>
+          <td>
+            <div class="prod-name">线粒体营养补充剂胶囊120粒改善代谢</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66b99df4000000001d0210e7" target="_blank" rel="noopener">🏪 Designs for Health海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:4%" title="W18: 0.1w"></div><div class="mini-bar" style="height:6%" title="W19: 0.2w"></div><div class="mini-bar" style="height:3%" title="W20: 0.1w"></div><div class="mini-bar" style="height:100%" title="W21: 3.1w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="8" data-scene="美容养颜" data-pos="2" data-gmvw21="39309.31" data-gmv4w="40647.31" data-buyers4w="3">
+          <td>8</td>
+          <td>
+            <div class="prod-name">【有有宠粉】Y.IMPRESSION 澳洲进口冰白番茄酵母饮 225ml/盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5f9a233f0000000001001dac" target="_blank" rel="noopener">🏪 Y.IMPRESSION因贝森旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:3%" title="W20: 0.1w"></div><div class="mini-bar" style="height:100%" title="W21: 3.9w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="9" data-scene="美容养颜" data-pos="2" data-gmvw21="71746.45000000001" data-gmv4w="74462.45000000001" data-buyers4w="1">
+          <td>9</td>
+          <td>
+            <div class="prod-name">白草莓超模丸悦享超模曲线0负担.60/粒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5fd8656d000000000101f0c4" target="_blank" rel="noopener">🏪 Bmark海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:4%" title="W20: 0.3w"></div><div class="mini-bar" style="height:100%" title="W21: 7.2w"></div></div></td>
+          <td class="num">1</td>
+        </tr>
+        
+        <tr data-idx="10" data-scene="运动健康" data-pos="2" data-gmvw21="45791.19" data-gmv4w="51574.810000000005" data-buyers4w="17">
+          <td>10</td>
+          <td>
+            <div class="prod-name">【遥遥抗老实践专属】小蓝管软骨素运动修复关节凝胶外用氨糖舒缓</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5f7037490000000001008784" target="_blank" rel="noopener">🏪 Curarti海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#52c41a1a;color:#52c41a">🏃 运动健康</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:3%" title="W18: 0.1w"></div><div class="mini-bar" style="height:6%" title="W19: 0.3w"></div><div class="mini-bar" style="height:4%" title="W20: 0.2w"></div><div class="mini-bar" style="height:100%" title="W21: 4.6w"></div></div></td>
+          <td class="num">17</td>
+        </tr>
+        
+        <tr data-idx="11" data-scene="美容养颜" data-pos="3" data-gmvw21="37502.520000000004" data-gmv4w="40076.920000000006" data-buyers4w="4">
+          <td>11</td>
+          <td>
+            <div class="prod-name">【直播专属】复春素颜激活套组28天</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6062555d0000000001005bd2" target="_blank" rel="noopener">🏪 D-LAB NUTRICOSMETICS海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 0.1w"></div><div class="mini-bar" style="height:5%" title="W20: 0.2w"></div><div class="mini-bar" style="height:100%" title="W21: 3.8w"></div></div></td>
+          <td class="num">4</td>
+        </tr>
+        
+        <tr data-idx="12" data-scene="美容养颜" data-pos="2" data-gmvw21="55826.079999999994" data-gmv4w="58684.049999999996" data-buyers4w="2">
+          <td>12</td>
+          <td>
+            <div class="prod-name">【甜椒】半年量·痘肌脂皮组合·活性B族60粒*3+吡啶甲酸锌180粒*1</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:5%" title="W20: 0.3w"></div><div class="mini-bar" style="height:100%" title="W21: 5.6w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="13" data-scene="心脑养护" data-pos="3" data-gmvw21="146212.07" data-gmv4w="156252.26" data-buyers4w="13">
+          <td>13</td>
+          <td>
+            <div class="prod-name">【发糕专属】 小千金套组成人95高纯鱼油rTGOmega3VD</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60fe5f050000000001002b64" target="_blank" rel="noopener">🏪 WHC万赫希海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:7%" title="W20: 1.0w"></div><div class="mini-bar" style="height:100%" title="W21: 14.6w"></div></div></td>
+          <td class="num">13</td>
+        </tr>
+        
+        <tr data-idx="14" data-scene="维矿补充" data-pos="3" data-gmvw21="44279.17999999999" data-gmv4w="50305.06999999999" data-buyers4w="2">
+          <td>14</td>
+          <td>
+            <div class="prod-name">【包小姐专属】生命花园mykind 40+有机女士多种维生素 60粒/瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/63e1fca90000000026012965" target="_blank" rel="noopener">🏪 雀巢健康科学海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.0w"></div><div class="mini-bar" style="height:6%" title="W19: 0.3w"></div><div class="mini-bar" style="height:7%" title="W20: 0.3w"></div><div class="mini-bar" style="height:100%" title="W21: 4.4w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="15" data-scene="消化调理" data-pos="2" data-gmvw21="58150.25999999999" data-gmv4w="72141.68" data-buyers4w="8">
+          <td>15</td>
+          <td>
+            <div class="prod-name">敏感肠调理新升级960亿 PLUS超感益生菌 石头哥推荐</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5baec4594048540001af7d77" target="_blank" rel="noopener">🏪 lifespace益倍适海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:3%" title="W18: 0.2w"></div><div class="mini-bar" style="height:14%" title="W19: 0.8w"></div><div class="mini-bar" style="height:7%" title="W20: 0.4w"></div><div class="mini-bar" style="height:100%" title="W21: 5.8w"></div></div></td>
+          <td class="num">8</td>
+        </tr>
+        
+        <tr data-idx="16" data-scene="消化调理" data-pos="2" data-gmvw21="47702.73" data-gmv4w="51671.08" data-buyers4w="6">
+          <td>16</td>
+          <td>
+            <div class="prod-name">【酒瓶盖专属66直播】多效代谢益生菌胶囊 AKKKING2.0</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/616179fe0000000002024c42" target="_blank" rel="noopener">🏪 WonderLab保健食品海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:8%" title="W20: 0.4w"></div><div class="mini-bar" style="height:100%" title="W21: 4.8w"></div></div></td>
+          <td class="num">6</td>
+        </tr>
+        
+        <tr data-idx="17" data-scene="女性特护" data-pos="3" data-gmvw21="37612.08" data-gmv4w="43451.840000000004" data-buyers4w="8">
+          <td>17</td>
+          <td>
+            <div class="prod-name">无晶体辅酶Q10 8倍高吸收保护心脏心脑血管备孕爸妈长辈</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#eb2f961a;color:#eb2f96">💜 女性特护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:2%" title="W18: 0.1w"></div><div class="mini-bar" style="height:5%" title="W19: 0.2w"></div><div class="mini-bar" style="height:9%" title="W20: 0.3w"></div><div class="mini-bar" style="height:100%" title="W21: 3.8w"></div></div></td>
+          <td class="num">8</td>
+        </tr>
+        
+        <tr data-idx="18" data-scene="消化调理" data-pos="2" data-gmvw21="36078.49" data-gmv4w="40740.49" data-buyers4w="2">
+          <td>18</td>
+          <td>
+            <div class="prod-name">利敏舒益生菌儿童成人过敏体质皮肤敏感舒敏冻干粉</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5c25e6220000000006031152" target="_blank" rel="noopener">🏪 蒙佩尔兰旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:4%" title="W18: 0.1w"></div><div class="mini-bar" style="height:9%" title="W19: 0.3w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 3.6w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="19" data-scene="维矿补充" data-pos="2" data-gmvw21="116930.85" data-gmv4w="118933.85" data-buyers4w="3">
+          <td>19</td>
+          <td>
+            <div class="prod-name">【yoyo专属】新升级第七代 20-60岁分龄定制女性综合维生素营养包</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5bfc9e32e4840900015621e2" target="_blank" rel="noopener">🏪 FANCL HealthScience海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:1%" title="W19: 0.2w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 11.7w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="20" data-scene="美容养颜" data-pos="2" data-gmvw21="40876.420000000006" data-gmv4w="41826.41" data-buyers4w="2">
+          <td>20</td>
+          <td>
+            <div class="prod-name">【creamyisland】睡镁人丸90粒 睡美容觉 睡养皮肤</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 0.1w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 4.1w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="21" data-scene="维矿补充" data-pos="2" data-gmvw21="88509.06999999998" data-gmv4w="97765.06999999998" data-buyers4w="3">
+          <td>21</td>
+          <td>
+            <div class="prod-name">【色拉和博士专属】神经原性复合维生素B族-金装</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5b3acf06e8ac2b4276e87a44" target="_blank" rel="noopener">🏪 BIOGENA葆淳海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:10%" title="W19: 0.9w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 8.9w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="22" data-scene="维矿补充" data-pos="2" data-gmvw21="43794.95" data-gmv4w="47868.95" data-buyers4w="1">
+          <td>22</td>
+          <td>
+            <div class="prod-name">【白雪公主专属】联合利华NF黄金胶囊更年期女士养发虾青素玛卡</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6445f39200000000120372d5" target="_blank" rel="noopener">🏪 Nutrafol海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:9%" title="W19: 0.4w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 4.4w"></div></div></td>
+          <td class="num">1</td>
+        </tr>
+        
+        <tr data-idx="23" data-scene="美容养颜" data-pos="2" data-gmvw21="64595.61" data-gmv4w="67924.95" data-buyers4w="2">
+          <td>23</td>
+          <td>
+            <div class="prod-name">【许赛文专属-丸治益生】无额度专拍链接</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/62665c3c0000000010008a63" target="_blank" rel="noopener">🏪 Dr.Watanabe海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:5%" title="W19: 0.3w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 6.5w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="24" data-scene="消化调理" data-pos="2" data-gmvw21="30178.98" data-gmv4w="31168.98" data-buyers4w="2">
+          <td>24</td>
+          <td>
+            <div class="prod-name">幽卫乐大人儿童肠胃肠道消化成人腹胀口气养胃护胃</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5c25e6220000000006031152" target="_blank" rel="noopener">🏪 蒙佩尔兰旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:3%" title="W19: 0.1w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 3.0w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="25" data-scene="缓解疲劳" data-pos="2" data-gmvw21="49811.25" data-gmv4w="50472.14" data-buyers4w="4">
+          <td>25</td>
+          <td>
+            <div class="prod-name">【静姐姐专属】视觉营养素 磷脂DHA保护视力无负担 3盒/6盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5dbbbb190000000001000695" target="_blank" rel="noopener">🏪 ROMEGA海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#722ed11a;color:#722ed1">⚡ 缓解疲劳</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:1%" title="W19: 0.1w"></div><div class="mini-bar" style="height:0%" title="W20: 0.0w"></div><div class="mini-bar" style="height:100%" title="W21: 5.0w"></div></div></td>
+          <td class="num">4</td>
+        </tr>
+        
+        <tr data-idx="26" data-scene="美容养颜" data-pos="3" data-gmvw21="46690.329999999994" data-gmv4w="52653.59" data-buyers4w="4">
+          <td>26</td>
+          <td>
+            <div class="prod-name">【甜椒狂欢节】迪卫欧 有机姜黄素胶囊护关节 60粒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/65407b550000000004008306" target="_blank" rel="noopener">🏪 Dynveo海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 0.1w"></div><div class="mini-bar" style="height:11%" title="W20: 0.5w"></div><div class="mini-bar" style="height:100%" title="W21: 4.7w"></div></div></td>
+          <td class="num">4</td>
+        </tr>
+        
+        <tr data-idx="27" data-scene="维矿补充" data-pos="3" data-gmvw21="35082.28" data-gmv4w="40985.9" data-buyers4w="18">
+          <td>27</td>
+          <td>
+            <div class="prod-name">维生素D营养片100片</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6343ae0e000000001901fe60" target="_blank" rel="noopener">🏪 Jamieson海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.0w"></div><div class="mini-bar" style="height:3%" title="W19: 0.1w"></div><div class="mini-bar" style="height:13%" title="W20: 0.5w"></div><div class="mini-bar" style="height:100%" title="W21: 3.5w"></div></div></td>
+          <td class="num">18</td>
+        </tr>
+        
+        <tr data-idx="28" data-scene="增强免疫" data-pos="2" data-gmvw21="47038.310000000005" data-gmv4w="53514.310000000005" data-buyers4w="2">
+          <td>28</td>
+          <td>
+            <div class="prod-name">【安吉专属】灵芝胶原饮50ml*10瓶/盒 灵芝小金瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6220292c000000001000ecc5" target="_blank" rel="noopener">🏪 维特健灵 VITA GREEN旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:14%" title="W20: 0.6w"></div><div class="mini-bar" style="height:100%" title="W21: 4.7w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="29" data-scene="美容养颜" data-pos="2" data-gmvw21="135120.55" data-gmv4w="156458.21" data-buyers4w="9">
+          <td>29</td>
+          <td>
+            <div class="prod-name">【直播专属】PRO专业版胶原蛋白肽</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6062555d0000000001005bd2" target="_blank" rel="noopener">🏪 D-LAB NUTRICOSMETICS海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:16%" title="W20: 2.1w"></div><div class="mini-bar" style="height:100%" title="W21: 13.5w"></div></div></td>
+          <td class="num">9</td>
+        </tr>
+        
+        <tr data-idx="30" data-scene="美容养颜" data-pos="3" data-gmvw21="34455.95000000001" data-gmv4w="42884.610000000015" data-buyers4w="9">
+          <td>30</td>
+          <td>
+            <div class="prod-name">西班牙波利王舒腿凝胶腿脚疲劳七叶树舒缓青筋凸起静脉芦荟保健</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5ca601710000000011032001" target="_blank" rel="noopener">🏪 Plameca海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:2%" title="W18: 0.1w"></div><div class="mini-bar" style="height:5%" title="W19: 0.2w"></div><div class="mini-bar" style="height:17%" title="W20: 0.6w"></div><div class="mini-bar" style="height:100%" title="W21: 3.4w"></div></div></td>
+          <td class="num">9</td>
+        </tr>
+        
+        <tr data-idx="31" data-scene="美容养颜" data-pos="2" data-gmvw21="67153.05" data-gmv4w="96804.17" data-buyers4w="7">
+          <td>31</td>
+          <td>
+            <div class="prod-name">所先HairGrow胶囊锯棕榈毛发蓬蓬松健康发质【直播专属】</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/60c2d6880000000001001d34" target="_blank" rel="noopener">🏪 NiceTop所先海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:3%" title="W18: 0.2w"></div><div class="mini-bar" style="height:24%" title="W19: 1.6w"></div><div class="mini-bar" style="height:18%" title="W20: 1.2w"></div><div class="mini-bar" style="height:100%" title="W21: 6.7w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="32" data-scene="消化调理" data-pos="2" data-gmvw21="32440.34" data-gmv4w="51708.34" data-buyers4w="7">
+          <td>32</td>
+          <td>
+            <div class="prod-name">【Lingling专属】养胃素胶囊养胃粘膜强胃健脾缓胃气胀痛 60粒/瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:41%" title="W18: 1.3w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:18%" title="W20: 0.6w"></div><div class="mini-bar" style="height:100%" title="W21: 3.2w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="33" data-scene="心脑养护" data-pos="3" data-gmvw21="34715.9" data-gmv4w="47618.62" data-buyers4w="2">
+          <td>33</td>
+          <td>
+            <div class="prod-name">【6.18石头哥宠粉活动】PNZ红琥珀EPA鱼油 60粒/盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/64cb5d29000000000b009855" target="_blank" rel="noopener">🏪 Phatma海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:16%" title="W19: 0.5w"></div><div class="mini-bar" style="height:22%" title="W20: 0.8w"></div><div class="mini-bar" style="height:100%" title="W21: 3.5w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="34" data-scene="睡眠改善" data-pos="2" data-gmvw21="43866.090000000004" data-gmv4w="81828.6" data-buyers4w="2">
+          <td>34</td>
+          <td>
+            <div class="prod-name">【曾曾专属】罗多彼精油益生菌内调养肠胃提代谢祛痘K老助眠便秘</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/681c2563000000000500cd05" target="_blank" rel="noopener">🏪 罗多彼Rhodobio海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#2f54eb1a;color:#2f54eb">🌙 睡眠改善</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:8%" title="W18: 0.3w"></div><div class="mini-bar" style="height:53%" title="W19: 2.3w"></div><div class="mini-bar" style="height:26%" title="W20: 1.1w"></div><div class="mini-bar" style="height:100%" title="W21: 4.4w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="35" data-scene="维矿补充" data-pos="3" data-gmvw21="34621.85" data-gmv4w="44691.729999999996" data-buyers4w="7">
+          <td>35</td>
+          <td>
+            <div class="prod-name">【柏林专属】痘肌脂皮组合 · 活性维生素B族+吡啶甲酸锌</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 0.1w"></div><div class="mini-bar" style="height:26%" title="W20: 0.9w"></div><div class="mini-bar" style="height:100%" title="W21: 3.5w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="36" data-scene="消化调理" data-pos="2" data-gmvw21="72017.5" data-gmv4w="155302.88" data-buyers4w="11">
+          <td>36</td>
+          <td>
+            <div class="prod-name">【桃子小姐专属】 SmartSlimPlus益生菌PLUS</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/62665c3c0000000010008a63" target="_blank" rel="noopener">🏪 Dr.Watanabe海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:28%" title="W18: 2.0w"></div><div class="mini-bar" style="height:56%" title="W19: 4.0w"></div><div class="mini-bar" style="height:32%" title="W20: 2.3w"></div><div class="mini-bar" style="height:100%" title="W21: 7.2w"></div></div></td>
+          <td class="num">11</td>
+        </tr>
+        
+        <tr data-idx="37" data-scene="心脑养护" data-pos="2" data-gmvw21="82648.77" data-gmv4w="162356.88" data-buyers4w="1">
+          <td>37</td>
+          <td>
+            <div class="prod-name">澳门星轨贝塔酸口服液职场精英续航思维脑动认知专注力</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66a99272000000001d022347" target="_blank" rel="noopener">🏪 赛脑思SynasWell的海外店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:60%" title="W19: 5.0w"></div><div class="mini-bar" style="height:36%" title="W20: 3.0w"></div><div class="mini-bar" style="height:100%" title="W21: 8.3w"></div></div></td>
+          <td class="num">1</td>
+        </tr>
+        
+        <tr data-idx="38" data-scene="心脑养护" data-pos="2" data-gmvw21="31579.660000000003" data-gmv4w="43528.4" data-buyers4w="3">
+          <td>38</td>
+          <td>
+            <div class="prod-name">【开妈专属】小金星mini儿童鱼油 30粒/盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5c8667bd0000000016015190" target="_blank" rel="noopener">🏪 Biowell海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:38%" title="W20: 1.2w"></div><div class="mini-bar" style="height:100%" title="W21: 3.2w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="39" data-scene="美容养颜" data-pos="2" data-gmvw21="54868.72" data-gmv4w="152542.86000000002" data-buyers4w="11">
+          <td>39</td>
+          <td>
+            <div class="prod-name">【许赛文-官旗】丸治益生Curcumin铂金白姜黄纳米水溶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/62665c3c0000000010008a63" target="_blank" rel="noopener">🏪 Dr.Watanabe海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:59%" title="W18: 3.3w"></div><div class="mini-bar" style="height:79%" title="W19: 4.4w"></div><div class="mini-bar" style="height:39%" title="W20: 2.1w"></div><div class="mini-bar" style="height:100%" title="W21: 5.5w"></div></div></td>
+          <td class="num">11</td>
+        </tr>
+        
+        <tr data-idx="40" data-scene="心脑养护" data-pos="2" data-gmvw21="36638.74" data-gmv4w="55313.17999999999" data-buyers4w="17">
+          <td>40</td>
+          <td>
+            <div class="prod-name">【福利品】高浓度鱼油胶囊75粒（单独下单，不要合并其他订单）</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6343ae0e000000001901fe60" target="_blank" rel="noopener">🏪 Jamieson海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:7%" title="W18: 0.3w"></div><div class="mini-bar" style="height:5%" title="W19: 0.2w"></div><div class="mini-bar" style="height:39%" title="W20: 1.4w"></div><div class="mini-bar" style="height:100%" title="W21: 3.7w"></div></div></td>
+          <td class="num">17</td>
+        </tr>
+        
+        <tr data-idx="41" data-scene="减肥塑形" data-pos="2" data-gmvw21="31322.57" data-gmv4w="76155.70999999999" data-buyers4w="10">
+          <td>41</td>
+          <td>
+            <div class="prod-name">【阿星专属】绝脂神体重管理排油纤体碳水阻断剂餐前吸收胶囊</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5c3ecc1b0000000005026eca" target="_blank" rel="noopener">🏪 樂道NOTO海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff9a3c1a;color:#ff9a3c">⚖️ 减肥塑形</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:41%" title="W18: 1.3w"></div><div class="mini-bar" style="height:61%" title="W19: 1.9w"></div><div class="mini-bar" style="height:42%" title="W20: 1.3w"></div><div class="mini-bar" style="height:100%" title="W21: 3.1w"></div></div></td>
+          <td class="num">10</td>
+        </tr>
+        
+        <tr data-idx="42" data-scene="心脑养护" data-pos="3" data-gmvw21="75926.76" data-gmv4w="128786.44" data-buyers4w="7">
+          <td>42</td>
+          <td>
+            <div class="prod-name">【6.18石头哥宠粉专属】PNZ1440mg Omega3鱼油胶囊rTG型98%高纯度</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/64cb5d29000000000b009855" target="_blank" rel="noopener">🏪 Phatma海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:26%" title="W19: 2.0w"></div><div class="mini-bar" style="height:43%" title="W20: 3.3w"></div><div class="mini-bar" style="height:100%" title="W21: 7.6w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="43" data-scene="美容养颜" data-pos="3" data-gmvw21="59046.13" data-gmv4w="90608.11" data-buyers4w="7">
+          <td>43</td>
+          <td>
+            <div class="prod-name">618囤货【尚朵朵专属】茶集萃·油碳糖中式阻断·大餐救星植物萃取</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/670cbe61000000001e005904" target="_blank" rel="noopener">🏪 天颐清一清官方旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:10%" title="W19: 0.6w"></div><div class="mini-bar" style="height:43%" title="W20: 2.6w"></div><div class="mini-bar" style="height:100%" title="W21: 5.9w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="44" data-scene="心脑养护" data-pos="3" data-gmvw21="51264.15" data-gmv4w="97325.66" data-buyers4w="6">
+          <td>44</td>
+          <td>
+            <div class="prod-name">【6.18石头哥宠粉活动专属】PNZ小领航员儿童鱼油</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/64cb5d29000000000b009855" target="_blank" rel="noopener">🏪 Phatma海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:43%" title="W19: 2.2w"></div><div class="mini-bar" style="height:47%" title="W20: 2.4w"></div><div class="mini-bar" style="height:100%" title="W21: 5.1w"></div></div></td>
+          <td class="num">6</td>
+        </tr>
+        
+        <tr data-idx="45" data-scene="女性特护" data-pos="2" data-gmvw21="61528.00000000001" data-gmv4w="101746.53" data-buyers4w="7">
+          <td>45</td>
+          <td>
+            <div class="prod-name">【Lingling专属】女性卵巢保养更期调理雌激素调理黑升麻84粒/瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#eb2f961a;color:#eb2f96">💜 女性特护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:15%" title="W18: 0.9w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:50%" title="W20: 3.1w"></div><div class="mini-bar" style="height:100%" title="W21: 6.2w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="46" data-scene="美容养颜" data-pos="2" data-gmvw21="55626.35999999999" data-gmv4w="83799.68" data-buyers4w="7">
+          <td>46</td>
+          <td>
+            <div class="prod-name">刘依蝶.液体钙骨健康饮 钙镁K2D3硅青少年孕妇女性老年骨骼宝藏品</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/558cba896b9f1610737b729f" target="_blank" rel="noopener">🏪 FLORA海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:51%" title="W20: 2.8w"></div><div class="mini-bar" style="height:100%" title="W21: 5.6w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="47" data-scene="心脑养护" data-pos="3" data-gmvw21="31919.76" data-gmv4w="63508.47" data-buyers4w="3">
+          <td>47</td>
+          <td>
+            <div class="prod-name">【6.18石头哥宠粉专属】PNZ水乳双溶还原型辅酶Q10高吸收</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/64cb5d29000000000b009855" target="_blank" rel="noopener">🏪 Phatma海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:44%" title="W19: 1.4w"></div><div class="mini-bar" style="height:55%" title="W20: 1.7w"></div><div class="mini-bar" style="height:100%" title="W21: 3.2w"></div></div></td>
+          <td class="num">3</td>
+        </tr>
+        
+        <tr data-idx="48" data-scene="增强免疫" data-pos="2" data-gmvw21="47041.82" data-gmv4w="91926.04999999999" data-buyers4w="13">
+          <td>48</td>
+          <td>
+            <div class="prod-name">【Lingling专属】熬夜应酬必备健肝宝60粒/瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6184a0ca0000000010005556" target="_blank" rel="noopener">🏪 VitaGreen维特健灵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#faad141a;color:#faad14">🛡️ 增强免疫</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:26%" title="W18: 1.2w"></div><div class="mini-bar" style="height:15%" title="W19: 0.7w"></div><div class="mini-bar" style="height:55%" title="W20: 2.6w"></div><div class="mini-bar" style="height:100%" title="W21: 4.7w"></div></div></td>
+          <td class="num">13</td>
+        </tr>
+        
+        <tr data-idx="49" data-scene="女性特护" data-pos="3" data-gmvw21="32478.719999999998" data-gmv4w="56852.479999999996" data-buyers4w="9">
+          <td>49</td>
+          <td>
+            <div class="prod-name">【查理专属】卵巢护理肌醇粉女性保养抗衰活性叶酸Q10效期至27/04</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#eb2f961a;color:#eb2f96">💜 女性特护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:3%" title="W18: 0.1w"></div><div class="mini-bar" style="height:10%" title="W19: 0.3w"></div><div class="mini-bar" style="height:62%" title="W20: 2.0w"></div><div class="mini-bar" style="height:100%" title="W21: 3.2w"></div></div></td>
+          <td class="num">9</td>
+        </tr>
+        
+        <tr data-idx="50" data-scene="缓解疲劳" data-pos="3" data-gmvw21="40471.57000000001" data-gmv4w="71772.08000000002" data-buyers4w="33">
+          <td>50</td>
+          <td>
+            <div class="prod-name">【福利品】叶黄素胶囊20mg45粒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6343ae0e000000001901fe60" target="_blank" rel="noopener">🏪 Jamieson海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#722ed11a;color:#722ed1">⚡ 缓解疲劳</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:7%" title="W18: 0.3w"></div><div class="mini-bar" style="height:9%" title="W19: 0.4w"></div><div class="mini-bar" style="height:62%" title="W20: 2.5w"></div><div class="mini-bar" style="height:100%" title="W21: 4.0w"></div></div></td>
+          <td class="num">33</td>
+        </tr>
+        
+        <tr data-idx="51" data-scene="美容养颜" data-pos="2" data-gmvw21="37950" data-gmv4w="61825" data-buyers4w="2">
+          <td>51</td>
+          <td>
+            <div class="prod-name">【小A专属】PNZ全龄段守护套组</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/64cb5d29000000000b009855" target="_blank" rel="noopener">🏪 Phatma海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:63%" title="W20: 2.4w"></div><div class="mini-bar" style="height:100%" title="W21: 3.8w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="52" data-scene="心脑养护" data-pos="3" data-gmvw21="40129.18" data-gmv4w="92851.83" data-buyers4w="49">
+          <td>52</td>
+          <td>
+            <div class="prod-name">【福利品】辅酶q10软胶囊心脏辅酶素60mg28年5月到期</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6343ae0e000000001901fe60" target="_blank" rel="noopener">🏪 Jamieson海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:25%" title="W18: 1.0w"></div><div class="mini-bar" style="height:35%" title="W19: 1.4w"></div><div class="mini-bar" style="height:72%" title="W20: 2.9w"></div><div class="mini-bar" style="height:100%" title="W21: 4.0w"></div></div></td>
+          <td class="num">49</td>
+        </tr>
+        
+        <tr data-idx="53" data-scene="美容养颜" data-pos="3" data-gmvw21="40190.73" data-gmv4w="78930.17000000001" data-buyers4w="7">
+          <td>53</td>
+          <td>
+            <div class="prod-name">胶原蛋白粉护发美甲补钙提升全身健康体质（澳版）</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66b99df4000000001d0210e7" target="_blank" rel="noopener">🏪 Designs for Health海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:2%" title="W18: 0.1w"></div><div class="mini-bar" style="height:12%" title="W19: 0.5w"></div><div class="mini-bar" style="height:82%" title="W20: 3.3w"></div><div class="mini-bar" style="height:100%" title="W21: 4.0w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="54" data-scene="消化调理" data-pos="2" data-gmvw21="96697.7" data-gmv4w="178586.03" data-buyers4w="2">
+          <td>54</td>
+          <td>
+            <div class="prod-name">【jiying专属3瓶装】500亿乳酸菌高活性益生菌支持肠道菌群平衡</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/66b99df4000000001d0210e7" target="_blank" rel="noopener">🏪 Designs for Health海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.0w"></div><div class="mini-bar" style="height:85%" title="W20: 8.2w"></div><div class="mini-bar" style="height:100%" title="W21: 9.7w"></div></div></td>
+          <td class="num">2</td>
+        </tr>
+        
+        <tr data-idx="55" data-scene="女性特护" data-pos="2" data-gmvw21="80238.23999999999" data-gmv4w="157169.99" data-buyers4w="5">
+          <td>55</td>
+          <td>
+            <div class="prod-name">【大筠专属】红宝瓶3.0 卵巢逆龄胶囊 辅酶Q10 叶酸 60粒/瓶</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6274d323000000001501c4ae" target="_blank" rel="noopener">🏪 LAIFE乐梵海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#eb2f961a;color:#eb2f96">💜 女性特护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:3%" title="W18: 0.3w"></div><div class="mini-bar" style="height:3%" title="W19: 0.3w"></div><div class="mini-bar" style="height:89%" title="W20: 7.2w"></div><div class="mini-bar" style="height:100%" title="W21: 8.0w"></div></div></td>
+          <td class="num">5</td>
+        </tr>
+        
+        <tr data-idx="56" data-scene="心脑养护" data-pos="3" data-gmvw21="38417.15" data-gmv4w="76890.87" data-buyers4w="10">
+          <td>56</td>
+          <td>
+            <div class="prod-name">【大筠专属】拜耳水晶鱼油95%纯度omega3深海鱼油软胶囊60粒/盒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5b7bb8a5da49a10001d11a69" target="_blank" rel="noopener">🏪 ONE A DAY海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续3周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:2%" title="W19: 0.1w"></div><div class="mini-bar" style="height:98%" title="W20: 3.8w"></div><div class="mini-bar" style="height:100%" title="W21: 3.8w"></div></div></td>
+          <td class="num">10</td>
+        </tr>
+        
+        <tr data-idx="57" data-scene="心脑养护" data-pos="2" data-gmvw21="85720.92999999998" data-gmv4w="195854.53999999998" data-buyers4w="11">
+          <td>57</td>
+          <td>
+            <div class="prod-name">【直播专属】小金星plus鱼油dha</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/5c8667bd0000000016015190" target="_blank" rel="noopener">🏪 Biowell海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#fa8c161a;color:#fa8c16">🧠 心脑养护</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:4%" title="W19: 0.4w"></div><div class="mini-bar" style="height:100%" title="W20: 10.6w"></div><div class="mini-bar" style="height:81%" title="W21: 8.6w"></div></div></td>
+          <td class="num">11</td>
+        </tr>
+        
+        <tr data-idx="58" data-scene="消化调理" data-pos="2" data-gmvw21="30135.219999999994" data-gmv4w="74699.44" data-buyers4w="7">
+          <td>58</td>
+          <td>
+            <div class="prod-name">DIGEST MATE全消化酶益生菌胶囊肠道菌群平衡营养补充剂120粒</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6421206600000000120116b6" target="_blank" rel="noopener">🏪 Microbiome Labs益葆来海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#a0d9111a;color:#a0d911">🌾 消化调理</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t5">⭐ T5 长尾</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:1%" title="W19: 0.0w"></div><div class="mini-bar" style="height:100%" title="W20: 4.4w"></div><div class="mini-bar" style="height:68%" title="W21: 3.0w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="59" data-scene="美容养颜" data-pos="2" data-gmvw21="43629.35" data-gmv4w="165831.10000000003" data-buyers4w="19">
+          <td>59</td>
+          <td>
+            <div class="prod-name">【石头哥】增强型胶原蛋白肽粉500g/罐</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/609bbb330000000001002c70" target="_blank" rel="noopener">🏪 Organika奥加尼卡海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:8%" title="W18: 0.9w"></div><div class="mini-bar" style="height:10%" title="W19: 1.0w"></div><div class="mini-bar" style="height:100%" title="W20: 10.3w"></div><div class="mini-bar" style="height:42%" title="W21: 4.4w"></div></div></td>
+          <td class="num">19</td>
+        </tr>
+        
+        <tr data-idx="60" data-scene="维矿补充" data-pos="2" data-gmvw21="39384.0" data-gmv4w="163029.64" data-buyers4w="7">
+          <td>60</td>
+          <td>
+            <div class="prod-name">活性维生素D3-5000IU 骨相抗衰闭环养骨养成骨相美女 效期至27/12</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/6092354900000000010051d2" target="_blank" rel="noopener">🏪 Thorne悦恩海外旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#1890ff1a;color:#1890ff">💊 维矿补充</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:0%" title="W18: 0.0w"></div><div class="mini-bar" style="height:0%" title="W19: 0.1w"></div><div class="mini-bar" style="height:100%" title="W20: 12.3w"></div><div class="mini-bar" style="height:32%" title="W21: 3.9w"></div></div></td>
+          <td class="num">7</td>
+        </tr>
+        
+        <tr data-idx="61" data-scene="美容养颜" data-pos="2" data-gmvw21="37559.62000000001" data-gmv4w="189449.22999999998" data-buyers4w="13">
+          <td>61</td>
+          <td>
+            <div class="prod-name">【爱米酱专属】茶集萃油碳糖中式阻断 大餐救星 植物萃取</div>
+            <div class="prod-shop"><a class="shop-link" href="https://www.xiaohongshu.com/user/profile/670cbe61000000001e005904" target="_blank" rel="noopener">🏪 天颐清一清官方旗舰店</a></div>
+          </td>
+          <td><span class="scene-tag" style="background:#ff78751a;color:#ff7875">✨ 美容养颜</span></td>
+          <td class="rank-cell"><span class="rank-tag rk-t4">⭐⭐ T4 腰部</span></td>
+          <td><span class="pos-badge">连续2周↑</span></td>
+          <td><div class="mini-bars"><div class="mini-bar" style="height:1%" title="W18: 0.2w"></div><div class="mini-bar" style="height:3%" title="W19: 0.4w"></div><div class="mini-bar" style="height:100%" title="W20: 14.6w"></div><div class="mini-bar" style="height:26%" title="W21: 3.8w"></div></div></td>
+          <td class="num">13</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+  
+  <div class="footer">
+    📊 本看板为脱敏展示版，具体数值已做模糊处理 · 打标体系：西式保健品三维打标体系
+  </div>
+</div>
+
+<script>
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+function filterByScene(scene) {
+  document.querySelectorAll('.scene-card').forEach(c => c.classList.remove('selected'));
+  if (scene) {
+    document.querySelector(`.scene-card[data-scene="${scene}"]`).classList.add('selected');
+  }
+  document.querySelectorAll('#qualified-table tbody tr').forEach(tr => {
+    if (!scene || tr.dataset.scene === scene) {
+      tr.style.display = '';
+    } else {
+      tr.style.display = 'none';
+    }
+  });
+}
+
+// 表头点击排序
+(function() {
+  document.querySelectorAll('table.sortable').forEach(function(table) {
+    table.querySelectorAll('thead th[data-sort]').forEach(function(th) {
+      th.addEventListener('click', function() {
+        const key = th.dataset.sort;
+        const type = th.dataset.type || 'str';
+        // 当前列已激活 → 切换 asc/desc；否则默认 desc（数值）/ asc（文本）
+        let dir;
+        if (th.classList.contains('sort-active')) {
+          dir = th.classList.contains('sort-desc') ? 'asc' : 'desc';
+        } else {
+          dir = (type === 'num') ? 'desc' : 'asc';
+        }
+        // 清掉其它列标识
+        table.querySelectorAll('thead th').forEach(function(o) {
+          o.classList.remove('sort-active','sort-asc','sort-desc');
+        });
+        th.classList.add('sort-active', dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort(function(a, b) {
+          let va = a.dataset[key]; let vb = b.dataset[key];
+          if (type === 'num') {
+            va = parseFloat(va); vb = parseFloat(vb);
+            if (isNaN(va)) va = -Infinity;
+            if (isNaN(vb)) vb = -Infinity;
+            return dir === 'asc' ? va - vb : vb - va;
+          } else {
+            va = (va||'').toString(); vb = (vb||'').toString();
+            return dir === 'asc' ? va.localeCompare(vb, 'zh') : vb.localeCompare(va, 'zh');
+          }
+        });
+        // 重新写入 + 刷新行号
+        rows.forEach(function(r, i) {
+          tbody.appendChild(r);
+          const firstTd = r.querySelector('td');
+          if (firstTd) firstTd.textContent = (i + 1);
+        });
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
